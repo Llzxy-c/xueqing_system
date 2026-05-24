@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智学·学情分析系统 · 教师端</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', 'PingFang SC', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(44, 62, 80, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white; padding: 16px 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .header h1 { font-size: 1.8rem; font-weight: 500; letter-spacing: 1px; }
+        .header p { opacity: 0.9; margin-top: 4px; font-size: 0.95rem; }
+        .container { display: flex; height: calc(100vh - 80px); padding: 20px; gap: 20px; }
+        .dashboard-panel, .ai-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            overflow: hidden; display: flex; flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        .dashboard-panel:hover, .ai-panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .dashboard-panel { flex: 2; }
+        .ai-panel { flex: 1; }
+        .panel-header {
+            padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-weight: 600; color: #2c3e50; background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            font-size: 1.1rem; letter-spacing: 0.5px;
+        }
+        iframe { width: 100%; height: 100%; border: none; background: rgba(255,255,255,0.5); }
+        .skeleton-loader {
+            flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 16px;
+            background: rgba(255,255,255,0.3);
+        }
+        .skeleton-bar {
+            height: 40px;
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px;
+        }
+        .skeleton-chart {
+            flex: 1; min-height: 200px;
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .footer-note {
+            padding: 8px 24px; font-size: 0.8rem; color: rgba(255,255,255,0.8);
+            text-align: right; background: rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 智学·学情分析系统</h1>
+        <p>数据看板 + AI 教学助手 | 课堂智能决策</p >
+    </div>
+    <div class="container">
+        <div class="dashboard-panel">
+            <div class="panel-header">📊 班级学情全景看板</div>
+            <div id="dashboard-loader" class="skeleton-loader">
+                <div class="skeleton-bar" style="width: 60%;"></div>
+                <div class="skeleton-chart"></div>
+                <div class="skeleton-bar" style="width: 80%;"></div>
+                <div class="skeleton-bar" style="width: 50%;"></div>
+            </div>
+            <iframe id="dashboard-iframe" 
+                    src="http://localhost:3000/public/dashboard/YOUR_DASHBOARD_ID"
+                    frameborder="0" width="100%" height="100%"
+                    allowtransparency="true"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                    style="display: none;"
+                    onload="document.getElementById('dashboard-loader').style.display='none'; this.style.display='block';">
+            </iframe>
+        </div>
+        <div class="ai-panel">
+            <div class="panel-header">🤖 学情诊断 AI 助手</div>
+            <div id="coze-chat-container" style="width: 100%; height: 100%; background: transparent;"></div>
+        </div>
+    </div>
+    <div class="footer-note">⚡ 教师端 · 数据每日更新 · AI 分析结果仅供参考</div>
+
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
+    <script>
+        new CozeWebSDK.WebChatClient({
+            config: { bot_id: 'YOUR_BOT_ID' },
+            auth: {
+                type: 'token',
+                token: 'YOUR_COZE_TOKEN',
+                onRefreshToken: function() { return 'YOUR_COZE_TOKEN'; }
+            },
+            componentProps: {
+                title: '学情诊断 AI 助手',
+                layout: 'embedded',
+                container: document.getElementById('coze-chat-container')
+            }
+        });
+        setTimeout(function() {
+            var iframe = document.getElementById('dashboard-iframe');
+            var loader = document.getElementById('dashboard-loader');
+            if (iframe.style.display === 'none') {
+                loader.style.display = 'none';
+                iframe.style.display = 'block';
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
